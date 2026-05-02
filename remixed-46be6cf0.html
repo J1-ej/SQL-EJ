@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Базы данных и SQL за 30 дней · Backend & Security</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Unbounded:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0a14;--surface:#16111e;--surface2:#1e1828;--surface3:#261f32;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#f0eaff;--muted:#8a7aa0;--dim:#4a3a60;--accent:#a78bfa;--accent-dim:rgba(167,139,250,0.12);--accent-border:rgba(167,139,250,0.3);--blue:#38bdf8;--blue-dim:rgba(56,189,248,0.12);--blue-border:rgba(56,189,248,0.3);--amber:#fbbf24;--amber-dim:rgba(251,191,36,0.12);--amber-border:rgba(251,191,36,0.3);--red:#f87171;--red-dim:rgba(248,113,113,0.12);--red-border:rgba(248,113,113,0.3);--radius:14px;--radius-sm:8px;--font:'Manrope',sans-serif;--font-display:'Unbounded',sans-serif;--font-mono:'JetBrains Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.7;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.4}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(167,139,250,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(167,139,250,0.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.container{max-width:780px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+.header{padding:60px 0 40px;text-align:center}
+.header-badge{display:inline-flex;align-items:center;gap:8px;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:40px;padding:6px 16px;font-size:12px;font-weight:600;color:var(--accent);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:28px}
+.header-badge span{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.5)}}
+.header h1{font-family:var(--font-display);font-size:clamp(24px,5vw,46px);font-weight:700;line-height:1.1;margin-bottom:16px;letter-spacing:-1px}
+.header h1 .accent{color:var(--accent)}
+.header p{color:var(--muted);font-size:16px;max-width:500px;margin:0 auto 28px}
+.header-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.htag{padding:5px 14px;border-radius:40px;font-size:12px;font-weight:600;border:1px solid}
+.htag-p{color:var(--accent);background:var(--accent-dim);border-color:var(--accent-border)}
+.htag-b{color:var(--blue);background:var(--blue-dim);border-color:var(--blue-border)}
+.htag-a{color:var(--amber);background:var(--amber-dim);border-color:var(--amber-border)}
+.htag-r{color:var(--red);background:var(--red-dim);border-color:var(--red-border)}
+.progress-section{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:20px 24px;margin-bottom:32px}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.progress-top span{font-size:13px;color:var(--muted)}.progress-top strong{font-size:18px;font-weight:700;color:var(--accent);font-family:var(--font-display)}
+.bar-track{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),#60a5fa);border-radius:3px;transition:width 0.5s}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.stat{background:var(--surface2);border-radius:var(--radius-sm);padding:12px;text-align:center}
+.stat-val{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text)}.stat-label{font-size:11px;color:var(--muted);margin-top:2px}
+.week-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:28px}
+.wnav{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 8px;cursor:pointer;text-align:center;transition:all 0.2s}
+.wnav:hover{border-color:var(--border2);background:var(--surface2)}
+.wnav.aw1{background:var(--accent-dim);border-color:var(--accent-border)}.wnav.aw1 .wn{color:var(--accent)}
+.wnav.aw2{background:var(--blue-dim);border-color:var(--blue-border)}.wnav.aw2 .wn{color:var(--blue)}
+.wnav.aw3{background:var(--amber-dim);border-color:var(--amber-border)}.wnav.aw3 .wn{color:var(--amber)}
+.wnav.aw4{background:var(--red-dim);border-color:var(--red-border)}.wnav.aw4 .wn{color:var(--red)}
+.wnav .wn{font-family:var(--font-display);font-size:20px;font-weight:700;display:block;margin-bottom:2px;color:var(--dim)}
+.wnav .wt{font-size:11px;color:var(--muted)}
+.week-section{display:none}.week-section.show{display:block}
+.week-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.week-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.w1 .week-icon{background:var(--accent-dim)}.w2 .week-icon{background:var(--blue-dim)}.w3 .week-icon{background:var(--amber-dim)}.w4 .week-icon{background:var(--red-dim)}
+.week-meta h2{font-family:var(--font-display);font-size:16px;font-weight:600}.week-meta p{font-size:12px;color:var(--muted);margin-top:2px}
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;transition:border-color 0.2s}
+.day-card:hover{border-color:var(--border2)}.day-card.done{border-color:rgba(167,139,250,0.4)}
+.day-head{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+.day-num{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:12px;font-weight:700;flex-shrink:0}
+.w1 .day-num{background:var(--accent-dim);color:var(--accent)}.w2 .day-num{background:var(--blue-dim);color:var(--blue)}.w3 .day-num{background:var(--amber-dim);color:var(--amber)}.w4 .day-num{background:var(--red-dim);color:var(--red)}
+.day-title{font-size:14px;font-weight:600;flex:1}.day-check{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all 0.2s}
+.day-card.done .day-check{background:var(--accent);border-color:var(--accent);color:#1a0a2e}
+.day-arrow{font-size:12px;color:var(--dim);transition:transform 0.2s;flex-shrink:0}
+.day-card.open .day-arrow{transform:rotate(90deg)}
+.day-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border)}.day-card.open .day-body{display:block}
+.section-row{margin-top:14px}.section-row label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:6px}
+.section-row p{font-size:13px;color:var(--muted);line-height:1.65}
+.code-block{background:#09060f;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-top:8px;font-family:var(--font-mono);font-size:12px;line-height:1.75;overflow-x:auto}
+.code-block .cm{color:var(--dim)}.code-block .kw{color:#c4b5fd;font-weight:600}.code-block .fn{color:#93c5fd}.code-block .str{color:#86efac}.code-block .num{color:#fbbf24}.code-block .hl{color:var(--accent);font-weight:600}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.pill{font-family:var(--font-mono);font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.tip{border:1px solid;border-radius:var(--radius-sm);padding:10px 14px;margin-top:10px}
+.tip-warn{background:var(--amber-dim);border-color:var(--amber-border)}.tip-warn .tip-label{color:var(--amber)}
+.tip-info{background:var(--accent-dim);border-color:var(--accent-border)}.tip-info .tip-label{color:var(--accent)}
+.tip-danger{background:var(--red-dim);border-color:var(--red-border)}.tip-danger .tip-label{color:var(--red)}
+.tip .tip-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.tip p{font-size:12px;line-height:1.6;color:var(--muted)}
+.answer-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:8px;overflow:hidden}
+.answer-toggle{padding:10px 14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px;user-select:none}
+.answer-toggle::before{content:'▶';font-size:9px;transition:transform 0.2s}.answer-toggle.open::before{transform:rotate(90deg)}
+.answer-content{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}.answer-content.show{display:block}
+.answer-content p{font-size:12px;color:var(--muted);line-height:1.65;margin-top:10px}
+.task-box{background:var(--surface2);border:1px solid var(--border);border-left:3px solid;border-radius:var(--radius-sm);padding:12px 14px;margin-top:10px}
+.w1 .task-box{border-left-color:var(--accent)}.w2 .task-box{border-left-color:var(--blue)}.w3 .task-box{border-left-color:var(--amber)}.w4 .task-box{border-left-color:var(--red)}
+.task-box .task-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+.w1 .task-box .task-label{color:var(--accent)}.w2 .task-box .task-label{color:var(--blue)}.w3 .task-box .task-label{color:var(--amber)}.w4 .task-box .task-label{color:var(--red)}
+.task-box p{font-size:12px;color:var(--muted);line-height:1.6}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--surface3);padding:8px 12px;text-align:left;font-weight:600;color:var(--text);border:1px solid var(--border2)}
+td{padding:7px 12px;border:1px solid var(--border);color:var(--muted)}
+tr:nth-child(even) td{background:var(--surface2)}
+.schema{background:#09060f;border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-top:8px;font-family:var(--font-mono);font-size:12px;line-height:1.9;color:var(--muted);overflow-x:auto}
+.schema .hl{color:var(--accent)}.schema .arrow{color:var(--amber)}.schema .label{color:var(--blue)}.schema .pk{color:#f472b6}
+.mini-project{border-radius:var(--radius);padding:22px 24px;margin:20px 0;border:1px solid}
+.w1 .mini-project{background:var(--accent-dim);border-color:var(--accent-border)}.w2 .mini-project{background:var(--blue-dim);border-color:var(--blue-border)}.w3 .mini-project{background:var(--amber-dim);border-color:var(--amber-border)}.w4 .mini-project{background:var(--red-dim);border-color:var(--red-border)}
+.mp-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.w1 .mp-label{color:var(--accent)}.w2 .mp-label{color:var(--blue)}.w3 .mp-label{color:var(--amber)}.w4 .mp-label{color:var(--red)}
+.mini-project h3{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px}
+.mini-project p{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:10px}
+.checklist{list-style:none}.checklist li{font-size:13px;color:var(--muted);padding:4px 0;display:flex;gap:8px;align-items:flex-start}
+.w1 .checklist li::before{content:"▶";color:var(--accent);font-size:9px;margin-top:5px;flex-shrink:0}
+.w2 .checklist li::before{content:"▶";color:var(--blue);font-size:9px;margin-top:5px;flex-shrink:0}
+.w3 .checklist li::before{content:"▶";color:var(--amber);font-size:9px;margin-top:5px;flex-shrink:0}
+.w4 .checklist li::before{content:"▶";color:var(--red);font-size:9px;margin-top:5px;flex-shrink:0}
+.footer{text-align:center;padding:48px 0 32px;color:var(--dim);font-size:13px;border-top:1px solid var(--border);margin-top:40px}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+  <div class="header-badge"><span></span>Курс активен · 30 дней</div>
+  <h1>Базы данных <span class="accent">& SQL</span></h1>
+  <p>PostgreSQL от нуля до продакшна. Проектирование, запросы, безопасность и интеграция с Python.</p>
+  <div class="header-tags">
+    <span class="htag htag-p">PostgreSQL</span>
+    <span class="htag htag-b">Backend</span>
+    <span class="htag htag-a">SQL</span>
+    <span class="htag htag-r">Security</span>
+  </div>
+</div>
+<div class="progress-section">
+  <div class="progress-top"><span>Общий прогресс</span><strong id="prog-val">0%</strong></div>
+  <div class="bar-track"><div class="bar-fill" id="bar" style="width:0%"></div></div>
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-val" id="done-count">0</div><div class="stat-label">выполнено дней</div></div>
+    <div class="stat"><div class="stat-val">4</div><div class="stat-label">мини-проекта</div></div>
+    <div class="stat"><div class="stat-val">30</div><div class="stat-label">всего задач</div></div>
+  </div>
+</div>
+<div class="week-nav">
+  <div class="wnav aw1" onclick="showWeek(1)"><span class="wn">W1</span><span class="wt">SQL основы</span></div>
+  <div class="wnav" onclick="showWeek(2)"><span class="wn">W2</span><span class="wt">Связи & JOIN</span></div>
+  <div class="wnav" onclick="showWeek(3)"><span class="wn">W3</span><span class="wt">Агрегация & ИБ</span></div>
+  <div class="wnav" onclick="showWeek(4)"><span class="wn">W4</span><span class="wt">Python & ORM</span></div>
+</div>
+
+<!-- W1 -->
+<div id="week1" class="week-section w1 show">
+  <div class="week-header"><div class="week-icon">📊</div><div class="week-meta"><h2>Неделя 1 — Основы SQL и PostgreSQL</h2><p>Дни 1–7 · CREATE, INSERT, SELECT, WHERE · Мини-проект: База товаров</p></div></div>
+
+  <div class="day-card" id="d1">
+    <div class="day-head" onclick="toggleCard('d1')"><div class="day-num">01</div><div class="day-title">Введение в PostgreSQL и pgAdmin</div><div class="day-check" onclick="event.stopPropagation();markDone('d1')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label>
+        <p>PostgreSQL — мощная реляционная СУБД с открытым кодом. Стандарт индустрии для backend-разработки. Бэкенд-разработчик 70% времени работает с данными — именно поэтому SQL критически важен. pgAdmin — GUI для управления БД.</p>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Понятие</th><th>Аналогия</th><th>В PostgreSQL</th></tr></thead>
+        <tbody>
+          <tr><td>База данных</td><td>Файловый шкаф</td><td>CREATE DATABASE myapp</td></tr>
+          <tr><td>Таблица</td><td>Лист Excel</td><td>CREATE TABLE users (...)</td></tr>
+          <tr><td>Строка</td><td>Строка в Excel</td><td>Одна запись пользователя</td></tr>
+          <tr><td>Столбец</td><td>Колонка Excel</td><td>id, name, email, age</td></tr>
+          <tr><td>Тип данных</td><td>Формат ячейки</td><td>INTEGER, VARCHAR, BOOLEAN</td></tr>
+        </tbody>
+      </table></div>
+      <div class="code-block"><span class="cm">-- Установка (Ubuntu)</span>
+<span class="cm">-- sudo apt install postgresql postgresql-contrib</span>
+<span class="cm">-- sudo -u postgres psql</span>
+
+<span class="cm">-- Первые команды в psql</span>
+\l                          <span class="cm">-- список баз данных</span>
+\c mydb                     <span class="cm">-- подключиться к БД</span>
+\dt                         <span class="cm">-- список таблиц</span>
+\d users                    <span class="cm">-- структура таблицы</span>
+\q                          <span class="cm">-- выход</span>
+
+<span class="cm">-- Создание первой базы данных</span>
+<span class="kw">CREATE DATABASE</span> academy;
+<span class="kw">CREATE USER</span> dev_user <span class="kw">WITH PASSWORD</span> <span class="str">'secure_password'</span>;
+<span class="kw">GRANT ALL PRIVILEGES ON DATABASE</span> academy <span class="kw">TO</span> dev_user;</div>
+      <div class="tip tip-info"><div class="tip-label">💡 pgAdmin</div><p>Скачай pgAdmin 4 на pgadmin.org — графический интерфейс для PostgreSQL. Позволяет смотреть таблицы, выполнять запросы, видеть структуру БД без команд терминала. Полезен на начальном этапе.</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Установи PostgreSQL. Войди через <code>sudo -u postgres psql</code>. Создай базу данных <code>academy</code>. Создай пользователя <code>dev</code> с паролем. Подключись к academy под новым пользователем. Проверь список баз через <code>\l</code>.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d2">
+    <div class="day-head" onclick="toggleCard('d2')"><div class="day-num">02</div><div class="day-title">CREATE TABLE: типы данных PostgreSQL</div><div class="day-check" onclick="event.stopPropagation();markDone('d2')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Тип</th><th>Описание</th><th>Пример значения</th></tr></thead>
+        <tbody>
+          <tr><td><code>SERIAL</code></td><td>Автоинкремент (для ID)</td><td>1, 2, 3...</td></tr>
+          <tr><td><code>INTEGER</code></td><td>Целое число (-2B до 2B)</td><td>21, -5, 1000</td></tr>
+          <tr><td><code>BIGINT</code></td><td>Большое целое</td><td>9223372036854775807</td></tr>
+          <tr><td><code>NUMERIC(p,s)</code></td><td>Точное десятичное</td><td>19999.99 (NUMERIC 10,2)</td></tr>
+          <tr><td><code>VARCHAR(n)</code></td><td>Строка до n символов</td><td>'Алишер'</td></tr>
+          <tr><td><code>TEXT</code></td><td>Строка без ограничений</td><td>Длинный текст...</td></tr>
+          <tr><td><code>BOOLEAN</code></td><td>true/false</td><td>true, false, NULL</td></tr>
+          <tr><td><code>DATE</code></td><td>Дата</td><td>'2024-01-15'</td></tr>
+          <tr><td><code>TIMESTAMP</code></td><td>Дата и время</td><td>'2024-01-15 14:30:00'</td></tr>
+          <tr><td><code>JSONB</code></td><td>JSON (бинарный, с индексами)</td><td>{"key": "value"}</td></tr>
+          <tr><td><code>UUID</code></td><td>Уникальный ID</td><td>'550e8400-e29b-41d4'</td></tr>
+        </tbody>
+      </table></div>
+      <div class="code-block"><span class="cm">-- Создание таблицы пользователей</span>
+<span class="kw">CREATE TABLE</span> users (
+    id         <span class="hl">SERIAL PRIMARY KEY</span>,           <span class="cm">-- авто ID</span>
+    name       <span class="kw">VARCHAR</span>(<span class="num">100</span>) <span class="kw">NOT NULL</span>,        <span class="cm">-- обязательное</span>
+    email      <span class="kw">VARCHAR</span>(<span class="num">200</span>) <span class="kw">UNIQUE NOT NULL</span>,  <span class="cm">-- уникальное</span>
+    age        <span class="kw">INTEGER</span> <span class="kw">CHECK</span> (age >= <span class="num">0</span>),     <span class="cm">-- с проверкой</span>
+    city       <span class="kw">VARCHAR</span>(<span class="num">100</span>) <span class="kw">DEFAULT</span> <span class="str">'Алматы'</span>, <span class="cm">-- значение по умолчанию</span>
+    is_active  <span class="kw">BOOLEAN DEFAULT</span> <span class="kw">true</span>,
+    created_at <span class="kw">TIMESTAMP DEFAULT</span> NOW()       <span class="cm">-- автоматическая дата</span>
+);
+
+<span class="cm">-- Просмотр структуры таблицы</span>
+\d users
+
+<span class="cm">-- Изменение таблицы</span>
+<span class="kw">ALTER TABLE</span> users <span class="kw">ADD COLUMN</span> phone <span class="kw">VARCHAR</span>(<span class="num">20</span>);
+<span class="kw">ALTER TABLE</span> users <span class="kw">DROP COLUMN</span> phone;
+<span class="kw">ALTER TABLE</span> users <span class="kw">RENAME COLUMN</span> name <span class="kw">TO</span> full_name;</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Создай в базе academy три таблицы: <code>users</code> (id, name, email, age, city, created_at), <code>products</code> (id, name, price NUMERIC, category, stock INTEGER, created_at), <code>categories</code> (id, name, description). Проверь структуру каждой через <code>\d</code>.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d3">
+    <div class="day-head" onclick="toggleCard('d3')"><div class="day-num">03</div><div class="day-title">INSERT INTO: добавление данных</div><div class="day-check" onclick="event.stopPropagation();markDone('d3')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="code-block"><span class="cm">-- Одна запись</span>
+<span class="kw">INSERT INTO</span> users (name, email, age, city)
+<span class="kw">VALUES</span> (<span class="str">'Алишер'</span>, <span class="str">'ali@example.com'</span>, <span class="num">21</span>, <span class="str">'Алматы'</span>);
+
+<span class="cm">-- Несколько записей сразу (эффективнее)</span>
+<span class="kw">INSERT INTO</span> users (name, email, age, city) <span class="kw">VALUES</span>
+    (<span class="str">'Бекзат'</span>,   <span class="str">'bek@test.com'</span>,   <span class="num">24</span>, <span class="str">'Астана'</span>),
+    (<span class="str">'Диана'</span>,    <span class="str">'diana@test.com'</span>,  <span class="num">22</span>, <span class="str">'Алматы'</span>),
+    (<span class="str">'Нурлан'</span>,   <span class="str">'nur@test.com'</span>,    <span class="num">28</span>, <span class="str">'Шымкент'</span>),
+    (<span class="str">'Айгерим'</span>,  <span class="str">'ai@test.com'</span>,     <span class="num">19</span>, <span class="str">'Алматы'</span>),
+    (<span class="str">'Тимур'</span>,    <span class="str">'tim@test.com'</span>,    <span class="num">30</span>, <span class="str">'Астана'</span>);
+
+<span class="cm">-- Получить ID вставленной записи</span>
+<span class="kw">INSERT INTO</span> users (name, email, age) <span class="kw">VALUES</span>
+    (<span class="str">'Дамир'</span>, <span class="str">'damir@test.com'</span>, <span class="num">25</span>)
+<span class="kw">RETURNING</span> id, name;  <span class="cm">-- очень полезно!</span>
+
+<span class="cm">-- Вставка с подзапросом</span>
+<span class="kw">INSERT INTO</span> products (name, price, category)
+<span class="kw">VALUES</span> (<span class="str">'MacBook Pro'</span>, <span class="num">1299.99</span>, <span class="str">'Ноутбуки'</span>),
+       (<span class="str">'iPhone 15'</span>,   <span class="num">999.99</span>,  <span class="str">'Телефоны'</span>),
+       (<span class="str">'AirPods'</span>,     <span class="num">249.99</span>,  <span class="str">'Аксессуары'</span>);</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Добавь в таблицу users 10 записей с разными городами и возрастами. Добавь в products 8 товаров в 3 разных категориях с разными ценами. Используй RETURNING чтобы получить ID каждой новой записи. Проверь через SELECT *.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d4">
+    <div class="day-head" onclick="toggleCard('d4')"><div class="day-num">04</div><div class="day-title">SELECT: выборка данных</div><div class="day-check" onclick="event.stopPropagation();markDone('d4')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="code-block"><span class="cm">-- Базовый SELECT</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users;                    <span class="cm">-- все столбцы (избегай в продакшне)</span>
+<span class="kw">SELECT</span> name, email <span class="kw">FROM</span> users;          <span class="cm">-- конкретные столбцы</span>
+<span class="kw">SELECT</span> name <span class="kw">AS</span> <span class="str">"Имя"</span>, email <span class="kw">AS</span> <span class="str">"Почта"</span>  <span class="cm">-- алиасы столбцов</span>
+<span class="kw">FROM</span> users;
+
+<span class="cm">-- Вычисляемые столбцы</span>
+<span class="kw">SELECT</span>
+    name,
+    age,
+    <span class="num">2025</span> - age <span class="kw">AS</span> birth_year,           <span class="cm">-- вычислить год рождения</span>
+    UPPER(email) <span class="kw">AS</span> email_upper           <span class="cm">-- функция над столбцом</span>
+<span class="kw">FROM</span> users;
+
+<span class="cm">-- DISTINCT — уникальные значения</span>
+<span class="kw">SELECT DISTINCT</span> city <span class="kw">FROM</span> users;
+<span class="kw">SELECT DISTINCT</span> city, is_active <span class="kw">FROM</span> users;
+
+<span class="cm">-- LIMIT и OFFSET — пагинация</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">LIMIT</span> <span class="num">5</span>;             <span class="cm">-- первые 5</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">LIMIT</span> <span class="num">5</span> <span class="kw">OFFSET</span> <span class="num">10</span>;  <span class="cm">-- страница 3 (по 5)</span>
+
+<span class="cm">-- ORDER BY — сортировка</span>
+<span class="kw">SELECT</span> name, age <span class="kw">FROM</span> users <span class="kw">ORDER BY</span> age <span class="kw">ASC</span>;
+<span class="kw">SELECT</span> name, age <span class="kw">FROM</span> users <span class="kw">ORDER BY</span> age <span class="kw">DESC</span>;
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">ORDER BY</span> city <span class="kw">ASC</span>, age <span class="kw">DESC</span>;
+
+<span class="cm">-- Работа со строками</span>
+<span class="kw">SELECT</span> CONCAT(name, <span class="str">' из '</span>, city) <span class="kw">AS</span> description <span class="kw">FROM</span> users;
+<span class="kw">SELECT</span> LENGTH(name), LOWER(city) <span class="kw">FROM</span> users;</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Напиши запросы: 1) имена и email всех пользователей, 2) все уникальные города, 3) 3 самых молодых пользователя, 4) пользователи отсортированные по городу затем по имени, 5) имя + город в одном столбце формата "Алишер из Алматы".</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d5">
+    <div class="day-head" onclick="toggleCard('d5')"><div class="day-num">05</div><div class="day-title">WHERE: фильтрация данных</div><div class="day-check" onclick="event.stopPropagation();markDone('d5')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="code-block"><span class="cm">-- Сравнение</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> age > <span class="num">18</span>;
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> age >= <span class="num">21</span> <span class="kw">AND</span> city = <span class="str">'Алматы'</span>;
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> city = <span class="str">'Алматы'</span> <span class="kw">OR</span> city = <span class="str">'Астана'</span>;
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> age != <span class="num">25</span>;
+
+<span class="cm">-- IN — список значений</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> city <span class="kw">IN</span> (<span class="str">'Алматы'</span>, <span class="str">'Астана'</span>, <span class="str">'Шымкент'</span>);
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> age <span class="kw">NOT IN</span> (<span class="num">18</span>, <span class="num">19</span>, <span class="num">20</span>);
+
+<span class="cm">-- BETWEEN — диапазон</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> age <span class="kw">BETWEEN</span> <span class="num">20</span> <span class="kw">AND</span> <span class="num">30</span>;
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> products <span class="kw">WHERE</span> price <span class="kw">BETWEEN</span> <span class="num">100</span> <span class="kw">AND</span> <span class="num">500</span>;
+
+<span class="cm">-- LIKE — поиск по шаблону</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> name <span class="kw">LIKE</span> <span class="str">'А%'</span>;       <span class="cm">-- начинается с А</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> email <span class="kw">LIKE</span> <span class="str">'%@gmail%'</span>; <span class="cm">-- содержит @gmail</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> name <span class="kw">ILIKE</span> <span class="str">'а%'</span>;      <span class="cm">-- без учёта регистра</span>
+
+<span class="cm">-- IS NULL / IS NOT NULL</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> age <span class="kw">IS NULL</span>;
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> city <span class="kw">IS NOT NULL</span>;</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Напиши 6 запросов: 1) пользователи старше 18 из Алматы, 2) товары дешевле 500, 3) пользователи с именем начинающимся на "А", 4) товары в категории "Телефоны" или "Ноутбуки", 5) пользователи возраст которых между 20 и 30, 6) пользователи без указанного города.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d6">
+    <div class="day-head" onclick="toggleCard('d6')"><div class="day-num">06</div><div class="day-title">UPDATE и DELETE: изменение данных</div><div class="day-check" onclick="event.stopPropagation();markDone('d6')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="code-block"><span class="cm">-- UPDATE: обновление</span>
+<span class="kw">UPDATE</span> users <span class="kw">SET</span> age = <span class="num">22</span> <span class="kw">WHERE</span> id = <span class="num">1</span>;
+<span class="kw">UPDATE</span> users
+<span class="kw">SET</span> city = <span class="str">'Астана'</span>, is_active = <span class="kw">false</span>
+<span class="kw">WHERE</span> email = <span class="str">'ali@example.com'</span>;
+
+<span class="cm">-- UPDATE с вычислением</span>
+<span class="kw">UPDATE</span> products <span class="kw">SET</span> price = price * <span class="num">1.1</span>
+<span class="kw">WHERE</span> category = <span class="str">'Телефоны'</span>;    <span class="cm">-- повысить цену на 10%</span>
+
+<span class="cm">-- RETURNING — что обновилось</span>
+<span class="kw">UPDATE</span> users <span class="kw">SET</span> age = <span class="num">25</span> <span class="kw">WHERE</span> id = <span class="num">3</span>
+<span class="kw">RETURNING</span> id, name, age;
+
+<span class="cm">-- DELETE: удаление</span>
+<span class="kw">DELETE FROM</span> users <span class="kw">WHERE</span> id = <span class="num">10</span>;
+<span class="kw">DELETE FROM</span> users <span class="kw">WHERE</span> is_active = <span class="kw">false</span>;
+
+<span class="cm">-- UPSERT: вставить или обновить</span>
+<span class="kw">INSERT INTO</span> users (email, name, age)
+<span class="kw">VALUES</span> (<span class="str">'ali@test.com'</span>, <span class="str">'Алишер'</span>, <span class="num">22</span>)
+<span class="kw">ON CONFLICT</span> (email)
+<span class="kw">DO UPDATE SET</span> age = <span class="kw">EXCLUDED</span>.age;  <span class="cm">-- обновить если email уже есть</span></div>
+      <div class="tip tip-danger"><div class="tip-label">⚠ ОПАСНО</div><p><code>DELETE FROM users;</code> без WHERE удалит ВСЕ записи! <code>UPDATE users SET is_active = false;</code> без WHERE деактивирует всех! Всегда проверяй: сначала напиши SELECT с тем же WHERE, убедись что нашёл нужные записи — потом UPDATE/DELETE.</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Обнови возраст пользователя с id=1. Повысь цены всех товаров в категории "Аксессуары" на 15%. Деактивируй (is_active=false) пользователей моложе 18 лет. Удали товары с ценой 0 или NULL. Используй RETURNING для каждого запроса.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d7">
+    <div class="day-head" onclick="toggleCard('d7')"><div class="day-num">07</div><div class="day-title">ORDER BY, LIMIT, OFFSET и пагинация</div><div class="day-check" onclick="event.stopPropagation();markDone('d7')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>Сортировка и пагинация — основа любого списка в приложении. <code>ORDER BY</code> задаёт порядок вывода, <code>LIMIT</code> ограничивает количество строк, <code>OFFSET</code> пропускает строки — именно так работает пагинация (страница 1, 2, 3...). Понимание этого критично для любого backend API.</p></div>
+      <div class="code-block"><span class="cm">-- Сортировка</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> products <span class="kw">ORDER BY</span> price;          <span class="cm">-- по возрастанию (ASC по умолчанию)</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> products <span class="kw">ORDER BY</span> price <span class="kw">DESC</span>;     <span class="cm">-- по убыванию</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">ORDER BY</span> city, name;          <span class="cm">-- сначала по городу, затем по имени</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> orders <span class="kw">ORDER BY</span> created_at <span class="kw">DESC</span>;  <span class="cm">-- последние заказы первыми</span>
+
+<span class="cm">-- NULL в сортировке</span>
+<span class="kw">ORDER BY</span> price <span class="kw">NULLS LAST</span>    <span class="cm">-- NULL-значения в конце</span>
+<span class="kw">ORDER BY</span> price <span class="kw">NULLS FIRST</span>   <span class="cm">-- NULL-значения первыми</span>
+
+<span class="cm">-- Ограничение результатов</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> products <span class="kw">ORDER BY</span> price <span class="kw">DESC LIMIT</span> 10;   <span class="cm">-- топ-10 дорогих товаров</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">LIMIT</span> 1;                             <span class="cm">-- первая запись</span>
+
+<span class="cm">-- Пагинация: LIMIT + OFFSET</span>
+<span class="cm">-- Страница 1 (записи 1-10)</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> products <span class="kw">ORDER BY</span> id <span class="kw">LIMIT</span> 10 <span class="kw">OFFSET</span> 0;
+<span class="cm">-- Страница 2 (записи 11-20)</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> products <span class="kw">ORDER BY</span> id <span class="kw">LIMIT</span> 10 <span class="kw">OFFSET</span> 10;
+<span class="cm">-- Страница N</span>
+<span class="cm">-- OFFSET = (page_number - 1) * page_size</span>
+
+<span class="cm">-- Формула пагинации из Python (FastAPI/Django)</span>
+<span class="cm">-- page=3, size=10 → LIMIT 10 OFFSET 20</span>
+<span class="cm">-- cursor.execute("SELECT * FROM products ORDER BY id LIMIT %s OFFSET %s", (size, (page-1)*size))</span>
+
+<span class="cm">-- Считаем общее количество страниц</span>
+<span class="kw">SELECT COUNT</span>(*) <span class="kw">FROM</span> products;   <span class="cm">-- total / page_size = кол-во страниц</span></div>
+      <div class="tip tip-warn"><div class="tip-label">⚠ Проблема больших OFFSET</div><p>При большом OFFSET (например 100000) PostgreSQL всё равно читает все строки до нужного места — это медленно. Для больших таблиц используй cursor-based pagination: <code>WHERE id > last_seen_id LIMIT 10</code>.</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Выведи топ-5 самых дорогих товаров. Выведи 3 последних зарегистрированных пользователя. Реализуй пагинацию для таблицы products: страницы по 5 записей — напиши запросы для страниц 1, 2, 3. Добавь COUNT(*) для отображения общего числа страниц.</p></div>
+    </div>
+  </div>
+
+  <div class="mini-project">
+    <div class="mp-label">🏆 Мини-проект · День 7</div>
+    <h3>База данных интернет-магазина</h3>
+    <p>Создай полноценную схему и наполни данными.</p>
+    <ul class="checklist">
+      <li>Таблицы: users, products, categories — со всеми ограничениями</li>
+      <li>Добавить 15 пользователей, 20 товаров, 5 категорий</li>
+      <li>5 разных SELECT-запросов с WHERE, ORDER BY, LIMIT</li>
+      <li>Найти: топ-3 самых дорогих товара, все пользователи из Алматы</li>
+      <li>Обновить цены категории и посмотреть изменения через RETURNING</li>
+    </ul>
+  </div>
+</div>
+
+<!-- W2 -->
+<div id="week2" class="week-section w2">
+  <div class="week-header"><div class="week-icon">🔗</div><div class="week-meta"><h2>Неделя 2 — Связи между таблицами и JOIN</h2><p>Дни 8–14 · FK, INNER JOIN, LEFT JOIN · Мини-проект: Блог</p></div></div>
+
+  <div class="day-card" id="d8">
+    <div class="day-head" onclick="toggleCard('d8')"><div class="day-num">08</div><div class="day-title">Первичный и внешний ключи: PRIMARY KEY, FOREIGN KEY</div><div class="day-check" onclick="event.stopPropagation();markDone('d8')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label>
+        <p>PRIMARY KEY — уникальный идентификатор строки. FOREIGN KEY — ссылка на PK другой таблицы. Обеспечивает ссылочную целостность: нельзя добавить заказ несуществующему пользователю.</p>
+      </div>
+      <div class="schema"><span class="label">Связь «один ко многим»:</span>
+<span class="pk">users</span>                          <span class="pk">orders</span>
+┌─────────────────┐            ┌─────────────────────────┐
+│ <span class="hl">id</span> (PK)         │◄──────────│ <span class="hl">id</span> (PK)                 │
+│ name            │  1 : MANY  │ <span class="hl">user_id</span> (FK → users.id) │
+│ email           │            │ total_price              │
+└─────────────────┘            │ status                   │
+                               └─────────────────────────┘
+Один пользователь может иметь много заказов.</div>
+      <div class="code-block"><span class="cm">-- Создание таблицы с FK</span>
+<span class="kw">CREATE TABLE</span> orders (
+    id          <span class="hl">SERIAL PRIMARY KEY</span>,
+    user_id     <span class="kw">INTEGER NOT NULL</span>
+                <span class="hl">REFERENCES users(id)</span>
+                <span class="kw">ON DELETE CASCADE</span>,   <span class="cm">-- удалить заказы при удалении юзера</span>
+    total       <span class="kw">NUMERIC</span>(<span class="num">10</span>,<span class="num">2</span>) <span class="kw">NOT NULL</span>,
+    status      <span class="kw">VARCHAR</span>(<span class="num">20</span>) <span class="kw">DEFAULT</span> <span class="str">'pending'</span>,
+    created_at  <span class="kw">TIMESTAMP DEFAULT</span> NOW()
+);
+
+<span class="cm">-- Добавить заказы</span>
+<span class="kw">INSERT INTO</span> orders (user_id, total, status) <span class="kw">VALUES</span>
+    (<span class="num">1</span>, <span class="num">1299.99</span>, <span class="str">'completed'</span>),
+    (<span class="num">1</span>, <span class="num">249.99</span>,  <span class="str">'pending'</span>),
+    (<span class="num">2</span>, <span class="num">999.99</span>,  <span class="str">'completed'</span>),
+    (<span class="num">3</span>, <span class="num">49.99</span>,   <span class="str">'cancelled'</span>);
+
+<span class="cm">-- Это вызовет ошибку (пользователя 999 нет):</span>
+<span class="cm">-- INSERT INTO orders (user_id, total) VALUES (999, 100);</span>
+<span class="cm">-- ERROR: violates foreign key constraint</span></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Создай таблицу orders связанную с users через FK. Добавь по 2-3 заказа для каждого пользователя. Попробуй добавить заказ с несуществующим user_id — убедись что FK отказывает. Попробуй удалить пользователя у которого есть заказы.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d9">
+    <div class="day-head" onclick="toggleCard('d9')"><div class="day-num">09</div><div class="day-title">INNER JOIN: объединение таблиц</div><div class="day-check" onclick="event.stopPropagation();markDone('d9')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>JOIN объединяет строки из двух таблиц по условию. INNER JOIN возвращает только строки у которых есть совпадения в обеих таблицах.</p></div>
+      <div class="schema"><span class="label">INNER JOIN:</span>
+users:  [1:Алишер] [2:Бекзат] [3:Диана] [4:Нурлан]
+orders: [u_id=1]  [u_id=1]  [u_id=2]  [u_id=5 ← нет в users!]
+
+INNER JOIN вернёт только: Алишер+его заказы, Бекзат+его заказы
+Нурлан (без заказов) и u_id=5 (нет пользователя) — пропущены</div>
+      <div class="code-block"><span class="cm">-- Базовый INNER JOIN</span>
+<span class="kw">SELECT</span>
+    u.name,
+    u.email,
+    o.id <span class="kw">AS</span> order_id,
+    o.total,
+    o.status
+<span class="kw">FROM</span> users u
+<span class="kw">INNER JOIN</span> orders o <span class="kw">ON</span> u.id = o.user_id;
+
+<span class="cm">-- JOIN с фильтрацией</span>
+<span class="kw">SELECT</span> u.name, o.total
+<span class="kw">FROM</span> users u
+<span class="kw">JOIN</span> orders o <span class="kw">ON</span> u.id = o.user_id
+<span class="kw">WHERE</span> o.status = <span class="str">'completed'</span>
+<span class="kw">ORDER BY</span> o.total <span class="kw">DESC</span>;
+
+<span class="cm">-- Тройной JOIN</span>
+<span class="kw">SELECT</span>
+    u.name <span class="kw">AS</span> customer,
+    p.name <span class="kw">AS</span> product,
+    oi.quantity,
+    oi.price
+<span class="kw">FROM</span> users u
+<span class="kw">JOIN</span> orders o     <span class="kw">ON</span> u.id = o.user_id
+<span class="kw">JOIN</span> order_items oi <span class="kw">ON</span> o.id = oi.order_id
+<span class="kw">JOIN</span> products p   <span class="kw">ON</span> oi.product_id = p.id;</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Выведи: 1) имена пользователей вместе с суммами их заказов, 2) только завершённые заказы с именами покупателей, 3) пользователей у которых есть хотя бы один заказ. Добавь таблицу order_items (order_id FK, product_id FK, quantity, price) и сделай тройной JOIN.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d10">
+    <div class="day-head" onclick="toggleCard('d10')"><div class="day-num">10</div><div class="day-title">LEFT JOIN, RIGHT JOIN, FULL JOIN</div><div class="day-check" onclick="event.stopPropagation();markDone('d10')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="schema"><span class="label">Типы JOIN визуально:</span>
+
+INNER JOIN:    [A ∩ B]     только совпадения
+LEFT JOIN:     [A]         все левые + совпадения справа (NULL если нет)
+RIGHT JOIN:    [B]         все правые + совпадения слева (NULL если нет)
+FULL JOIN:     [A ∪ B]     все из обеих таблиц
+
+<span class="label">Пример LEFT JOIN:</span>
+users:        Алишер(2 заказа)  Бекзат(1 заказ)  Диана(0 заказов)
+LEFT JOIN:    Алишер+заказы     Бекзат+заказ     Диана + NULL NULL</div>
+      <div class="code-block"><span class="cm">-- LEFT JOIN: все пользователи, даже без заказов</span>
+<span class="kw">SELECT</span>
+    u.name,
+    o.id <span class="kw">AS</span> order_id,
+    o.total,
+    COALESCE(o.total, <span class="num">0</span>) <span class="kw">AS</span> total_or_zero  <span class="cm">-- NULL → 0</span>
+<span class="kw">FROM</span> users u
+<span class="kw">LEFT JOIN</span> orders o <span class="kw">ON</span> u.id = o.user_id;
+
+<span class="cm">-- Найти пользователей БЕЗ заказов</span>
+<span class="kw">SELECT</span> u.name, u.email
+<span class="kw">FROM</span> users u
+<span class="kw">LEFT JOIN</span> orders o <span class="kw">ON</span> u.id = o.user_id
+<span class="kw">WHERE</span> o.id <span class="kw">IS NULL</span>;               <span class="cm">-- нет совпадения = нет заказов</span>
+
+<span class="cm">-- FULL OUTER JOIN</span>
+<span class="kw">SELECT</span> u.name, o.total
+<span class="kw">FROM</span> users u
+<span class="kw">FULL OUTER JOIN</span> orders o <span class="kw">ON</span> u.id = o.user_id;</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Найди: 1) всех пользователей включая тех у кого нет заказов, 2) пользователей у которых НЕТ ни одного заказа (LEFT JOIN + WHERE IS NULL), 3) все товары включая те что никто не заказывал. Объясни разницу: почему результат INNER и LEFT JOIN различается?</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d11">
+    <div class="day-head" onclick="toggleCard('d11')"><div class="day-num">11</div><div class="day-title">SELF JOIN и алиасы таблиц</div><div class="day-check" onclick="event.stopPropagation();markDone('d11')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>SELF JOIN — соединение таблицы с самой собой. Используется для иерархических данных: сотрудник → руководитель, комментарий → родительский комментарий, категория → родительская категория. Алиасы (AS) делают запросы читаемыми и позволяют различать копии одной таблицы.</p></div>
+      <div class="code-block"><span class="cm">-- Таблица сотрудников с иерархией</span>
+<span class="kw">CREATE TABLE</span> employees (
+    id         <span class="kw">SERIAL PRIMARY KEY</span>,
+    name       <span class="kw">VARCHAR</span>(100),
+    manager_id <span class="kw">INT REFERENCES</span> employees(id)   <span class="cm">-- ссылка на себя!</span>
+);
+
+<span class="cm">-- SELF JOIN: сотрудники со своими руководителями</span>
+<span class="kw">SELECT</span>
+    e.name   <span class="kw">AS</span> employee,
+    m.name   <span class="kw">AS</span> manager
+<span class="kw">FROM</span> employees e
+<span class="kw">LEFT JOIN</span> employees m <span class="kw">ON</span> e.manager_id = m.id;
+<span class="cm">-- LEFT JOIN чтобы показать и тех у кого нет руководителя (NULL)</span>
+
+<span class="cm">-- Алиасы для удобства и читаемости</span>
+<span class="kw">SELECT</span>
+    u.name        <span class="kw">AS</span> user_name,
+    p.title       <span class="kw">AS</span> product_name,
+    o.total       <span class="kw">AS</span> order_total,
+    o.created_at  <span class="kw">AS</span> ordered_at
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> users    u <span class="kw">ON</span> o.user_id    = u.id
+<span class="kw">JOIN</span> products p <span class="kw">ON</span> o.product_id = p.id;
+
+<span class="cm">-- Категории с подкатегориями (рекурсивная структура)</span>
+<span class="kw">SELECT</span>
+    child.name  <span class="kw">AS</span> subcategory,
+    parent.name <span class="kw">AS</span> category
+<span class="kw">FROM</span> categories child
+<span class="kw">LEFT JOIN</span> categories parent <span class="kw">ON</span> child.parent_id = parent.id;</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Создай таблицу employees с полем manager_id (SELF FK). Добавь CEO, 3 менеджеров, 6 сотрудников. Напиши запрос: список всех сотрудников с именем их руководителя (NULL для CEO). Найди всех сотрудников конкретного менеджера.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d12">
+    <div class="day-head" onclick="toggleCard('d12')"><div class="day-num">12</div><div class="day-title">UNION, INTERSECT, EXCEPT: объединение результатов</div><div class="day-check" onclick="event.stopPropagation();markDone('d12')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>Операторы множеств комбинируют результаты нескольких SELECT. <code>UNION</code> объединяет (убирая дубликаты), <code>UNION ALL</code> — с дубликатами, <code>INTERSECT</code> — только общие строки, <code>EXCEPT</code> — строки первого запроса которых нет во втором.</p></div>
+      <div class="code-block"><span class="cm">-- UNION: объединить клиентов из двух городов</span>
+<span class="kw">SELECT</span> name, email <span class="kw">FROM</span> users <span class="kw">WHERE</span> city = <span class="str">'Алматы'</span>
+<span class="kw">UNION</span>
+<span class="kw">SELECT</span> name, email <span class="kw">FROM</span> users <span class="kw">WHERE</span> city = <span class="str">'Астана'</span>;
+<span class="cm">-- Колонок должно быть одинаково, типы совместимы</span>
+
+<span class="cm">-- UNION ALL (быстрее — не убирает дубликаты)</span>
+<span class="kw">SELECT</span> product_id, <span class="str">'active'</span> <span class="kw">AS</span> status <span class="kw">FROM</span> active_products
+<span class="kw">UNION ALL</span>
+<span class="kw">SELECT</span> product_id, <span class="str">'archived'</span> <span class="kw">AS</span> status <span class="kw">FROM</span> archived_products;
+
+<span class="cm">-- INTERSECT: пользователи которые есть И там и там</span>
+<span class="kw">SELECT</span> user_id <span class="kw">FROM</span> orders <span class="kw">WHERE</span> status = <span class="str">'completed'</span>
+<span class="kw">INTERSECT</span>
+<span class="kw">SELECT</span> user_id <span class="kw">FROM</span> reviews;
+<span class="cm">-- Пользователи которые и купили И оставили отзыв</span>
+
+<span class="cm">-- EXCEPT: пользователи которые купили но НЕ оставили отзыв</span>
+<span class="kw">SELECT</span> user_id <span class="kw">FROM</span> orders <span class="kw">WHERE</span> status = <span class="str">'completed'</span>
+<span class="kw">EXCEPT</span>
+<span class="kw">SELECT</span> user_id <span class="kw">FROM</span> reviews;
+
+<span class="cm">-- Сортировка применяется к итоговому результату</span>
+<span class="kw">SELECT</span> name <span class="kw">FROM</span> admins
+<span class="kw">UNION</span>
+<span class="kw">SELECT</span> name <span class="kw">FROM</span> moderators
+<span class="kw">ORDER BY</span> name;</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Используя UNION выведи единый список всех пользователей из Алматы и Астаны. Через EXCEPT найди пользователей у которых ЕСТЬ аккаунт, но НЕТ ни одного заказа (подсказка: SELECT id FROM users EXCEPT SELECT user_id FROM orders). Объясни разницу между UNION и UNION ALL.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d13">
+    <div class="day-head" onclick="toggleCard('d13')"><div class="day-num">13</div><div class="day-title">WITH (CTE): общие табличные выражения</div><div class="day-check" onclick="event.stopPropagation();markDone('d13')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>CTE (Common Table Expression) — временный именованный результат запроса. Делает сложные запросы читаемыми: вместо вложенных подзапросов ты описываешь логику шаг за шагом. Можно использовать несколько CTE в одном запросе.</p></div>
+      <div class="code-block"><span class="cm">-- Базовый синтаксис</span>
+<span class="kw">WITH</span> cte_name <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> ...  <span class="cm">-- этот результат доступен ниже</span>
+)
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> cte_name;
+
+<span class="cm">-- Пример: топ покупатели с их последним заказом</span>
+<span class="kw">WITH</span> top_buyers <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> user_id, <span class="kw">SUM</span>(total) <span class="kw">AS</span> spent
+    <span class="kw">FROM</span> orders
+    <span class="kw">GROUP BY</span> user_id
+    <span class="kw">HAVING SUM</span>(total) > 10000
+),
+last_orders <span class="kw">AS</span> (
+    <span class="kw">SELECT DISTINCT ON</span> (user_id)
+        user_id, created_at <span class="kw">AS</span> last_order_date
+    <span class="kw">FROM</span> orders
+    <span class="kw">ORDER BY</span> user_id, created_at <span class="kw">DESC</span>
+)
+<span class="kw">SELECT</span>
+    u.name,
+    tb.spent,
+    lo.last_order_date
+<span class="kw">FROM</span> top_buyers tb
+<span class="kw">JOIN</span> users u <span class="kw">ON</span> tb.user_id = u.id
+<span class="kw">JOIN</span> last_orders lo <span class="kw">ON</span> tb.user_id = lo.user_id
+<span class="kw">ORDER BY</span> tb.spent <span class="kw">DESC</span>;
+
+<span class="cm">-- CTE делает код читаемым — каждый блок описывает один шаг логики</span></div>
+      <div class="tip tip-info"><div class="tip-label">💡 CTE vs Подзапрос</div><p>CTE проще читать: каждый шаг имеет имя и понятную роль. Подзапрос в FROM (derived table) работает так же, но CTE можно переиспользовать в одном запросе несколько раз. При сложной логике — всегда CTE.</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Перепиши один из своих сложных запросов с JOIN через CTE. Создай CTE который находит пользователей потративших больше среднего по всем пользователям. Используй два CTE в одном запросе: первый считает статистику, второй фильтрует по ней.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d14">
+    <div class="day-head" onclick="toggleCard('d14')"><div class="day-num">14</div><div class="day-title">Многие-ко-многим: связующие таблицы</div><div class="day-check" onclick="event.stopPropagation();markDone('d14')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>Связь «многие-ко-многим» (M:N) — самая частая в реальных приложениях. Товар может иметь много тегов, тег — много товаров. Статья — много авторов, автор — много статей. Реализуется через промежуточную (связующую) таблицу.</p></div>
+      <div class="code-block"><span class="cm">-- Пример: статьи и теги (M:N)</span>
+<span class="kw">CREATE TABLE</span> posts (
+    id    <span class="kw">SERIAL PRIMARY KEY</span>,
+    title <span class="kw">VARCHAR</span>(200)
+);
+
+<span class="kw">CREATE TABLE</span> tags (
+    id   <span class="kw">SERIAL PRIMARY KEY</span>,
+    name <span class="kw">VARCHAR</span>(50) <span class="kw">UNIQUE</span>
+);
+
+<span class="cm">-- Связующая таблица</span>
+<span class="kw">CREATE TABLE</span> post_tags (
+    post_id <span class="kw">INT REFERENCES</span> posts(id) <span class="kw">ON DELETE CASCADE</span>,
+    tag_id  <span class="kw">INT REFERENCES</span> tags(id)  <span class="kw">ON DELETE CASCADE</span>,
+    <span class="kw">PRIMARY KEY</span> (post_id, tag_id)     <span class="cm">-- составной PK — дублей нет</span>
+);
+
+<span class="cm">-- Добавить тег к статье</span>
+<span class="kw">INSERT INTO</span> post_tags (post_id, tag_id) <span class="kw">VALUES</span> (1, 3);
+
+<span class="cm">-- Все статьи с тегами</span>
+<span class="kw">SELECT</span> p.title, <span class="fn">STRING_AGG</span>(t.name, <span class="str">', '</span>) <span class="kw">AS</span> tags
+<span class="kw">FROM</span> posts p
+<span class="kw">JOIN</span> post_tags pt <span class="kw">ON</span> p.id = pt.post_id
+<span class="kw">JOIN</span> tags t <span class="kw">ON</span> pt.tag_id = t.id
+<span class="kw">GROUP BY</span> p.id, p.title;
+
+<span class="cm">-- Все статьи с конкретным тегом</span>
+<span class="kw">SELECT</span> p.title
+<span class="kw">FROM</span> posts p
+<span class="kw">JOIN</span> post_tags pt <span class="kw">ON</span> p.id = pt.post_id
+<span class="kw">JOIN</span> tags t <span class="kw">ON</span> pt.tag_id = t.id
+<span class="kw">WHERE</span> t.name = <span class="str">'python'</span>;</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Создай схему: products, tags, product_tags. Добавь 5 продуктов и 5 тегов. Назначь каждому продукту 2-3 тега. Напиши запрос: вывести все продукты с их тегами через STRING_AGG. Найди все продукты с тегом 'sale'. Найди продукты у которых нет тегов (LEFT JOIN + IS NULL).</p></div>
+    </div>
+  </div>
+
+  <div class="mini-project">
+    <div class="mp-label">🏆 Мини-проект · День 14</div>
+    <h3>База данных Блога</h3>
+    <p>Реальная схема блог-платформы с авторами, статьями и комментариями.</p>
+    <ul class="checklist">
+      <li>Таблицы: authors, posts, comments, tags, post_tags (многие-ко-многим)</li>
+      <li>Добавить 5 авторов, 15 статей, 30 комментариев</li>
+      <li>JOIN: вывести статьи с именами авторов и количеством комментариев</li>
+      <li>Найти авторов без опубликованных статей (LEFT JOIN + IS NULL)</li>
+      <li>Вывести статьи с тегами через JOIN через промежуточную таблицу</li>
+    </ul>
+  </div>
+</div>
+
+<!-- W3 -->
+<div id="week3" class="week-section w3">
+  <div class="week-header"><div class="week-icon">📈</div><div class="week-meta"><h2>Неделя 3 — Агрегация и безопасность</h2><p>Дни 15–21 · GROUP BY, подзапросы, индексы, SQL-инъекции</p></div></div>
+
+  <div class="day-card" id="d15">
+    <div class="day-head" onclick="toggleCard('d15')"><div class="day-num">15</div><div class="day-title">Агрегатные функции: COUNT, SUM, AVG, MIN, MAX</div><div class="day-check" onclick="event.stopPropagation();markDone('d15')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="code-block"><span class="cm">-- Базовые агрегатные функции</span>
+<span class="kw">SELECT</span> <span class="fn">COUNT</span>(*) <span class="kw">FROM</span> users;                <span class="cm">-- всего пользователей</span>
+<span class="kw">SELECT</span> <span class="fn">COUNT</span>(*) <span class="kw">FROM</span> users <span class="kw">WHERE</span> is_active;  <span class="cm">-- активных</span>
+<span class="kw">SELECT</span> <span class="fn">AVG</span>(age) <span class="kw">FROM</span> users;                <span class="cm">-- средний возраст</span>
+<span class="kw">SELECT</span> <span class="fn">ROUND</span>(<span class="fn">AVG</span>(age), <span class="num">1</span>) <span class="kw">FROM</span> users;    <span class="cm">-- округлить</span>
+<span class="kw">SELECT</span> <span class="fn">MIN</span>(age), <span class="fn">MAX</span>(age) <span class="kw">FROM</span> users;     <span class="cm">-- мин и макс</span>
+<span class="kw">SELECT</span> <span class="fn">SUM</span>(total) <span class="kw">FROM</span> orders;             <span class="cm">-- сумма всех заказов</span>
+
+<span class="cm">-- Комбинирование</span>
+<span class="kw">SELECT</span>
+    <span class="fn">COUNT</span>(*) <span class="kw">AS</span> total_users,
+    <span class="fn">AVG</span>(age) <span class="kw">AS</span> avg_age,
+    <span class="fn">MIN</span>(age) <span class="kw">AS</span> youngest,
+    <span class="fn">MAX</span>(age) <span class="kw">AS</span> oldest,
+    <span class="fn">COUNT</span>(CASE WHEN is_active THEN 1 END) <span class="kw">AS</span> active_count
+<span class="kw">FROM</span> users;
+
+<span class="cm">-- STRING_AGG — собрать строки</span>
+<span class="kw">SELECT</span> city, <span class="fn">STRING_AGG</span>(name, <span class="str">', '</span>) <span class="kw">AS</span> names
+<span class="kw">FROM</span> users <span class="kw">GROUP BY</span> city;</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Одним запросом выведи статистику: количество пользователей, средний возраст (округли до 1 знака), самый молодой и старший возраст, количество активных пользователей, общая сумма всех заказов, средняя сумма заказа.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d16">
+    <div class="day-head" onclick="toggleCard('d16')"><div class="day-num">16</div><div class="day-title">GROUP BY и HAVING: группировка</div><div class="day-check" onclick="event.stopPropagation();markDone('d16')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="code-block"><span class="cm">-- GROUP BY группирует строки по значению столбца</span>
+<span class="kw">SELECT</span> city, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> users_count
+<span class="kw">FROM</span> users
+<span class="kw">GROUP BY</span> city
+<span class="kw">ORDER BY</span> users_count <span class="kw">DESC</span>;
+
+<span class="cm">-- Группировка по нескольким столбцам</span>
+<span class="kw">SELECT</span> city, is_active, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> cnt
+<span class="kw">FROM</span> users
+<span class="kw">GROUP BY</span> city, is_active;
+
+<span class="cm">-- HAVING — фильтр ПОСЛЕ группировки (WHERE — до)</span>
+<span class="kw">SELECT</span> user_id, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> order_count, <span class="fn">SUM</span>(total) <span class="kw">AS</span> total_spent
+<span class="kw">FROM</span> orders
+<span class="kw">GROUP BY</span> user_id
+<span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) > <span class="num">2</span>           <span class="cm">-- только у кого больше 2 заказов</span>
+<span class="kw">ORDER BY</span> total_spent <span class="kw">DESC</span>;
+
+<span class="cm">-- Порядок выполнения SQL-запроса:</span>
+<span class="cm">-- FROM → JOIN → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT</span>
+
+<span class="cm">-- JOIN + GROUP BY</span>
+<span class="kw">SELECT</span>
+    u.name,
+    <span class="fn">COUNT</span>(o.id) <span class="kw">AS</span> orders,
+    <span class="fn">SUM</span>(o.total) <span class="kw">AS</span> spent
+<span class="kw">FROM</span> users u
+<span class="kw">LEFT JOIN</span> orders o <span class="kw">ON</span> u.id = o.user_id
+<span class="kw">GROUP BY</span> u.id, u.name
+<span class="kw">ORDER BY</span> spent <span class="kw">DESC NULLS LAST</span>;</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Напиши: 1) количество пользователей в каждом городе, 2) среднюю цену товаров в каждой категории, 3) пользователей с суммой заказов больше 500 (HAVING), 4) топ-3 города по количеству пользователей, 5) для каждого пользователя: количество заказов и общая сумма.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d17">
+    <div class="day-head" onclick="toggleCard('d17')"><div class="day-num">17</div><div class="day-title">Подзапросы (Subqueries)</div><div class="day-check" onclick="event.stopPropagation();markDone('d17')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="code-block"><span class="cm">-- Подзапрос в WHERE</span>
+<span class="kw">SELECT</span> name, total
+<span class="kw">FROM</span> orders
+<span class="kw">WHERE</span> total > (<span class="kw">SELECT</span> <span class="fn">AVG</span>(total) <span class="kw">FROM</span> orders</span>);  <span class="cm">-- больше среднего</span>
+
+<span class="cm">-- Подзапрос с IN</span>
+<span class="kw">SELECT</span> name, email <span class="kw">FROM</span> users
+<span class="kw">WHERE</span> id <span class="kw">IN</span> (
+    <span class="kw">SELECT</span> user_id <span class="kw">FROM</span> orders
+    <span class="kw">WHERE</span> total > <span class="num">500</span>
+);
+
+<span class="cm">-- Коррелированный подзапрос (выполняется для каждой строки)</span>
+<span class="kw">SELECT</span>
+    u.name,
+    (<span class="kw">SELECT</span> <span class="fn">COUNT</span>(*) <span class="kw">FROM</span> orders o <span class="kw">WHERE</span> o.user_id = u.id) <span class="kw">AS</span> order_count
+<span class="kw">FROM</span> users u;
+
+<span class="cm">-- CTE (WITH) — именованный подзапрос (читабельнее)</span>
+<span class="kw">WITH</span> user_stats <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> user_id, <span class="fn">COUNT</span>(*) orders, <span class="fn">SUM</span>(total) spent
+    <span class="kw">FROM</span> orders <span class="kw">GROUP BY</span> user_id
+)
+<span class="kw">SELECT</span> u.name, us.orders, us.spent
+<span class="kw">FROM</span> users u
+<span class="kw">JOIN</span> user_stats us <span class="kw">ON</span> u.id = us.user_id
+<span class="kw">WHERE</span> us.spent > <span class="num">1000</span>;</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Напиши: 1) пользователя с самым дорогим заказом, 2) товары дороже средней цены в своей категории, 3) пользователей которые сделали хотя бы 1 заказ (через подзапрос EXISTS), 4) перепиши задачу №3 через CTE — сравни читаемость.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d18">
+    <div class="day-head" onclick="toggleCard('d18')"><div class="day-num">18</div><div class="day-title">Индексы: ускорение поиска</div><div class="day-check" onclick="event.stopPropagation();markDone('d18')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>Индекс — дополнительная структура данных для быстрого поиска. Как оглавление в книге: вместо просмотра всех страниц — сразу переходишь нужную. Замедляет INSERT/UPDATE (нужно обновлять индекс), но ускоряет SELECT в тысячи раз.</p></div>
+      <div class="code-block"><span class="cm">-- Создание индексов</span>
+<span class="kw">CREATE INDEX</span> idx_users_email <span class="kw">ON</span> users(email);
+<span class="kw">CREATE INDEX</span> idx_users_city  <span class="kw">ON</span> users(city);
+<span class="kw">CREATE INDEX</span> idx_orders_user_id <span class="kw">ON</span> orders(user_id);  <span class="cm">-- для JOIN</span>
+<span class="kw">CREATE INDEX</span> idx_orders_status_date <span class="kw">ON</span> orders(status, created_at);  <span class="cm">-- составной</span>
+
+<span class="cm">-- Уникальный индекс (автоматически создаётся для UNIQUE/PK)</span>
+<span class="kw">CREATE UNIQUE INDEX</span> idx_users_email_unique <span class="kw">ON</span> users(email);
+
+<span class="cm">-- Посмотреть план запроса (есть ли использование индекса)</span>
+<span class="kw">EXPLAIN</span> <span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> email = <span class="str">'ali@test.com'</span>;
+<span class="cm">-- Seq Scan = полный перебор (плохо)</span>
+<span class="cm">-- Index Scan = использует индекс (хорошо)</span>
+
+<span class="kw">EXPLAIN ANALYZE</span> <span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> city = <span class="str">'Алматы'</span>;
+<span class="cm">-- ANALYZE реально выполняет запрос и показывает время</span>
+
+<span class="cm">-- Посмотреть все индексы таблицы</span>
+\d users
+<span class="cm">-- или</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> pg_indexes <span class="kw">WHERE</span> tablename = <span class="str">'users'</span>;</div>
+      <div class="tip tip-warn"><div class="tip-label">⚠ Когда создавать индексы</div><p>Создавай индексы на: поля в WHERE которые используешь часто, поля JOIN (Foreign Keys), поля ORDER BY в больших таблицах. Не создавай на маленьких таблицах (< 1000 строк) — оптимизатор всё равно выберет Seq Scan.</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Создай индекс на email и city в таблице users. Используй EXPLAIN ANALYZE до и после — сравни время. Создай составной индекс на (status, created_at) для orders. Какие индексы уже автоматически созданы (PRIMARY KEY, UNIQUE)?</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d19">
+    <div class="day-head" onclick="toggleCard('d19')"><div class="day-num">19</div><div class="day-title">Оконные функции: ROW_NUMBER, RANK, LAG, LEAD</div><div class="day-check" onclick="event.stopPropagation();markDone('d19')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>Оконные функции вычисляют значения по группе строк (окну) не схлопывая их в одну — в отличие от GROUP BY. Это мощнейший инструмент аналитики: рейтинги, нарастающие итоги, сравнение с предыдущим периодом.</p></div>
+      <div class="code-block"><span class="cm">-- Синтаксис: функция OVER (PARTITION BY ... ORDER BY ...)</span>
+
+<span class="cm">-- ROW_NUMBER: порядковый номер в группе</span>
+<span class="kw">SELECT</span>
+    name,
+    city,
+    <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> city <span class="kw">ORDER BY</span> name) <span class="kw">AS</span> row_in_city
+<span class="kw">FROM</span> users;
+
+<span class="cm">-- RANK: рейтинг (с пропуском при одинаковых)</span>
+<span class="cm">-- DENSE_RANK: рейтинг (без пропуска)</span>
+<span class="kw">SELECT</span>
+    name,
+    total,
+    <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total <span class="kw">DESC</span>) <span class="kw">AS</span> rank
+<span class="kw">FROM</span> orders;
+
+<span class="cm">-- LAG/LEAD: предыдущее/следующее значение</span>
+<span class="kw">SELECT</span>
+    month,
+    revenue,
+    <span class="fn">LAG</span>(revenue) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> prev_month,
+    revenue - <span class="fn">LAG</span>(revenue) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> growth
+<span class="kw">FROM</span> monthly_stats;
+
+<span class="cm">-- Нарастающий итог (running total)</span>
+<span class="kw">SELECT</span>
+    created_at,
+    total,
+    <span class="fn">SUM</span>(total) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> created_at) <span class="kw">AS</span> cumulative_sum
+<span class="kw">FROM</span> orders;
+
+<span class="cm">-- Топ-1 заказ каждого пользователя</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> (
+    <span class="kw">SELECT</span> *, <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> user_id <span class="kw">ORDER BY</span> total <span class="kw">DESC</span>) <span class="kw">AS</span> rn
+    <span class="kw">FROM</span> orders
+) sub <span class="kw">WHERE</span> rn = 1;</div>
+      <div class="tip tip-info"><div class="tip-label">💡 Зачем это нужно</div><p>Оконные функции — обязательный навык для аналитических запросов. Используются везде: рейтинг пользователей, отчёты по периодам, дедупликация, поиск последней записи для каждой группы. Без них нужны громоздкие подзапросы.</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Используй ROW_NUMBER для нумерации заказов каждого пользователя по дате. Найди первый и последний заказ каждого пользователя. Посчитай нарастающую сумму продаж по датам. Используй LAG чтобы показать разницу между текущим и предыдущим заказом.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d20">
+    <div class="day-head" onclick="toggleCard('d20')"><div class="day-num">20</div><div class="day-title">SQL-инъекции: атака и защита</div><div class="day-check" onclick="event.stopPropagation();markDone('d20')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>SQL-инъекция — подстановка SQL-кода через поля ввода. Входит в топ-3 уязвимостей OWASP. Позволяет взломщику: получить все данные, обойти авторизацию, удалить таблицы.</p></div>
+      <div class="code-block"><span class="cm">-- УЯЗВИМЫЙ КОД (Python + f-строка — никогда так не делай!)</span>
+username = <span class="fn">input</span>()  <span class="cm"># пользователь вводит: admin' OR '1'='1</span>
+query = <span class="str">f"SELECT * FROM users WHERE email='{username}'"</span>
+<span class="cm"># Итоговый запрос:</span>
+<span class="cm"># SELECT * FROM users WHERE email='admin' OR '1'='1'</span>
+<span class="cm"># '1'='1' всегда true → вернёт ВСЕХ пользователей!</span>
+
+<span class="cm">-- Ещё опаснее: DROP TABLE</span>
+<span class="cm"># Ввод: '; DROP TABLE users; --</span>
+<span class="cm"># Итог: SELECT * FROM users WHERE email=''; DROP TABLE users; --'</span>
+<span class="cm"># Всё удалено!</span>
+
+<span class="cm">-- ЗАЩИТА: Prepared Statements (параметризованные запросы)</span>
+<span class="kw">import</span> psycopg2
+
+<span class="cm"># БЕЗОПАСНО — данные передаются отдельно от запроса</span>
+cursor.<span class="fn">execute</span>(
+    <span class="str">"SELECT * FROM users WHERE email = %s"</span>,
+    (username,)   <span class="cm"># кортеж с данными</span>
+)
+<span class="cm"># psycopg2 экранирует спецсимволы автоматически</span>
+<span class="cm"># ' становится \' — атака не работает</span>
+
+<span class="cm">-- Также защищает использование ORM:</span>
+<span class="cm"># User.query.filter_by(email=username).first()  # Django/SQLAlchemy</span></div>
+      <div class="tip tip-danger"><div class="tip-label">🔒 Правила защиты БД</div><p>1. Всегда используй Prepared Statements. 2. Никогда не вставляй данные пользователя в SQL-строку через конкатенацию или f-строки. 3. Минимальные права для БД-пользователя (только SELECT/INSERT нужных таблиц). 4. Не показывай SQL-ошибки пользователю. 5. Используй ORM.</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Разбери атаку <code>' OR '1'='1</code> — запиши что происходит с запросом. Напиши два Python-кода: уязвимый (с f-строкой) и защищённый (с psycopg2 + параметры). Попробуй инъекцию в защищённый код — убедись что не работает. Составь список 5 правил защиты.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d21">
+    <div class="day-head" onclick="toggleCard('d21')"><div class="day-num">21</div><div class="day-title">EXPLAIN ANALYZE: план выполнения запроса</div><div class="day-check" onclick="event.stopPropagation();markDone('d21')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p><code>EXPLAIN ANALYZE</code> — рентген запроса. Показывает как PostgreSQL выполняет запрос: какой план выбрал оптимизатор, сколько строк обработал, сколько времени ушло на каждый шаг. Без этого невозможно оптимизировать медленные запросы.</p></div>
+      <div class="code-block"><span class="cm">-- EXPLAIN — только план (без выполнения)</span>
+<span class="kw">EXPLAIN SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> email = <span class="str">'test@test.com'</span>;
+
+<span class="cm">-- EXPLAIN ANALYZE — план + реальное выполнение</span>
+<span class="kw">EXPLAIN ANALYZE SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> email = <span class="str">'test@test.com'</span>;
+
+<span class="cm">-- Что читать в выводе:</span>
+<span class="cm">-- Seq Scan  → полное сканирование таблицы (плохо для больших таблиц)</span>
+<span class="cm">-- Index Scan → использует индекс (хорошо)</span>
+<span class="cm">-- Bitmap Heap Scan → гибрид</span>
+<span class="cm">-- rows=  → оценка/реальное количество строк</span>
+<span class="cm">-- cost=  → относительная стоимость</span>
+<span class="cm">-- actual time= → реальное время в мс</span>
+
+<span class="cm">-- Сравниваем ДО создания индекса:</span>
+<span class="kw">EXPLAIN ANALYZE SELECT</span> * <span class="kw">FROM</span> orders <span class="kw">WHERE</span> status = <span class="str">'pending'</span>;
+<span class="cm">-- Seq Scan on orders (cost=0.00..450.00 rows=12 width=40)</span>
+<span class="cm">-- actual time=0.023..5.234 ms</span>
+
+<span class="kw">CREATE INDEX</span> idx_orders_status <span class="kw">ON</span> orders(status);
+
+<span class="cm">-- ПОСЛЕ создания индекса:</span>
+<span class="kw">EXPLAIN ANALYZE SELECT</span> * <span class="kw">FROM</span> orders <span class="kw">WHERE</span> status = <span class="str">'pending'</span>;
+<span class="cm">-- Index Scan using idx_orders_status (cost=0.28..8.30 rows=12)</span>
+<span class="cm">-- actual time=0.021..0.089 ms  ← намного быстрее!</span>
+
+<span class="cm">-- EXPLAIN ANALYZE с JOIN</span>
+<span class="kw">EXPLAIN ANALYZE</span>
+<span class="kw">SELECT</span> u.name, <span class="kw">COUNT</span>(o.id)
+<span class="kw">FROM</span> users u
+<span class="kw">LEFT JOIN</span> orders o <span class="kw">ON</span> u.id = o.user_id
+<span class="kw">GROUP BY</span> u.id;</div>
+      <div class="tip tip-info"><div class="tip-label">💡 Онлайн-визуализация</div><p>Скопируй вывод EXPLAIN в <strong>explain.dalibo.com</strong> — получишь красивую визуализацию плана запроса с деревом операций. Незаменимо для анализа сложных запросов.</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Возьми любой запрос с WHERE и запусти EXPLAIN ANALYZE. Найди Seq Scan и создай подходящий индекс. Снова запусти EXPLAIN ANALYZE — сравни время. Попробуй на запросе с JOIN между orders и users — что оптимизатор выбирает для соединения?</p></div>
+    </div>
+  </div>
+
+  <div class="mini-project">
+    <div class="mp-label">🏆 Мини-проект · День 21</div>
+    <h3>Аналитический отчёт магазина</h3>
+    <p>Сложные запросы с агрегацией, JOIN и защитой.</p>
+    <ul class="checklist">
+      <li>Средний чек заказа по каждому пользователю через GROUP BY</li>
+      <li>Топ-3 самых активных покупателя (больше всего потратили)</li>
+      <li>Пользователи без заказов (LEFT JOIN + IS NULL)</li>
+      <li>Категории с самыми дорогими товарами (AVG, GROUP BY, HAVING)</li>
+      <li>5 правил защиты БД — написать в виде SQL-комментариев</li>
+    </ul>
+  </div>
+</div>
+
+<!-- W4 -->
+<div id="week4" class="week-section w4">
+  <div class="week-header"><div class="week-icon">🐍</div><div class="week-meta"><h2>Неделя 4 — Python + PostgreSQL</h2><p>Дни 22–30 · psycopg2, транзакции, ORM · Финальный проект</p></div></div>
+
+  <div class="day-card" id="d22">
+    <div class="day-head" onclick="toggleCard('d22')"><div class="day-num">22</div><div class="day-title">psycopg2: подключение Python к PostgreSQL</div><div class="day-check" onclick="event.stopPropagation();markDone('d22')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="code-block"><span class="cm"># Установка</span>
+<span class="cm"># pip install psycopg2-binary</span>
+
+<span class="kw">import</span> psycopg2
+<span class="kw">from</span> psycopg2.extras <span class="kw">import</span> RealDictCursor
+
+<span class="cm"># Подключение</span>
+conn = psycopg2.<span class="fn">connect</span>(
+    host=<span class="str">"localhost"</span>,
+    port=<span class="num">5432</span>,
+    dbname=<span class="str">"academy"</span>,
+    user=<span class="str">"dev"</span>,
+    password=<span class="str">"secure_password"</span>
+)
+
+<span class="cm"># Через строку подключения</span>
+conn = psycopg2.<span class="fn">connect</span>(<span class="str">"postgresql://dev:password@localhost:5432/academy"</span>)
+
+<span class="cm"># Создать курсор (с возвратом словарей)</span>
+cursor = conn.<span class="fn">cursor</span>(cursor_factory=RealDictCursor)
+
+<span class="cm"># Выполнить запрос</span>
+cursor.<span class="fn">execute</span>(<span class="str">"SELECT * FROM users WHERE age > %s"</span>, (<span class="num">18</span>,))
+users = cursor.<span class="fn">fetchall</span>()  <span class="cm"># список словарей</span>
+<span class="kw">for</span> user <span class="kw">in</span> users:
+    <span class="fn">print</span>(<span class="str">f"{user['name']} из {user['city']}"</span>)
+
+<span class="cm"># Закрыть соединение</span>
+cursor.close()
+conn.close()
+
+<span class="cm"># Через контекстный менеджер (лучше)</span>
+<span class="kw">with</span> psycopg2.<span class="fn">connect</span>(...) <span class="kw">as</span> conn:
+    <span class="kw">with</span> conn.<span class="fn">cursor</span>(cursor_factory=RealDictCursor) <span class="kw">as</span> cur:
+        cur.<span class="fn">execute</span>(<span class="str">"SELECT COUNT(*) as cnt FROM users"</span>)
+        result = cur.<span class="fn">fetchone</span>()
+        <span class="fn">print</span>(<span class="str">f"Пользователей: {result['cnt']}"</span>)</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Напиши Python-скрипт: подключается к academy, проверяет соединение (выводит версию PostgreSQL), выводит количество пользователей, выводит список пользователей в формате таблицы. Используй RealDictCursor для удобной работы со словарями.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d23">
+    <div class="day-head" onclick="toggleCard('d23')"><div class="day-num">23</div><div class="day-title">CRUD-операции из Python</div><div class="day-check" onclick="event.stopPropagation();markDone('d23')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="code-block"><span class="kw">import</span> psycopg2
+<span class="kw">from</span> psycopg2.extras <span class="kw">import</span> RealDictCursor
+
+DB_URL = <span class="str">"postgresql://dev:password@localhost:5432/academy"</span>
+
+<span class="kw">def</span> <span class="fn">get_all_users</span>():
+    <span class="kw">with</span> psycopg2.<span class="fn">connect</span>(DB_URL) <span class="kw">as</span> conn:
+        <span class="kw">with</span> conn.<span class="fn">cursor</span>(cursor_factory=RealDictCursor) <span class="kw">as</span> cur:
+            cur.<span class="fn">execute</span>(<span class="str">"SELECT id, name, email, city FROM users ORDER BY name"</span>)
+            <span class="kw">return</span> cur.<span class="fn">fetchall</span>()
+
+<span class="kw">def</span> <span class="fn">create_user</span>(name, email, age, city):
+    <span class="kw">with</span> psycopg2.<span class="fn">connect</span>(DB_URL) <span class="kw">as</span> conn:
+        <span class="kw">with</span> conn.<span class="fn">cursor</span>() <span class="kw">as</span> cur:
+            cur.<span class="fn">execute</span>(
+                <span class="str">"INSERT INTO users (name, email, age, city) VALUES (%s,%s,%s,%s) RETURNING id"</span>,
+                (name, email, age, city)
+            )
+            user_id = cur.<span class="fn">fetchone</span>()[<span class="num">0</span>]
+            conn.<span class="fn">commit</span>()  <span class="cm"># ОБЯЗАТЕЛЬНО подтвердить изменения!</span>
+            <span class="kw">return</span> user_id
+
+<span class="kw">def</span> <span class="fn">update_user_city</span>(user_id, new_city):
+    <span class="kw">with</span> psycopg2.<span class="fn">connect</span>(DB_URL) <span class="kw">as</span> conn:
+        <span class="kw">with</span> conn.<span class="fn">cursor</span>() <span class="kw">as</span> cur:
+            cur.<span class="fn">execute</span>(
+                <span class="str">"UPDATE users SET city = %s WHERE id = %s"</span>,
+                (new_city, user_id)
+            )
+            conn.<span class="fn">commit</span>()
+            <span class="kw">return</span> cur.rowcount  <span class="cm"># количество обновлённых строк</span>
+
+<span class="kw">def</span> <span class="fn">delete_user</span>(user_id):
+    <span class="kw">with</span> psycopg2.<span class="fn">connect</span>(DB_URL) <span class="kw">as</span> conn:
+        <span class="kw">with</span> conn.<span class="fn">cursor</span>() <span class="kw">as</span> cur:
+            cur.<span class="fn">execute</span>(<span class="str">"DELETE FROM users WHERE id = %s"</span>, (user_id,))
+            conn.<span class="fn">commit</span>()
+
+<span class="cm"># Использование</span>
+new_id = <span class="fn">create_user</span>(<span class="str">"Дамир"</span>, <span class="str">"damir@test.com"</span>, <span class="num">25</span>, <span class="str">"Алматы"</span>)
+<span class="fn">print</span>(<span class="str">f"Создан пользователь с ID: {new_id}"</span>)</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Создай Python-модуль <code>db.py</code> с функциями: get_all_users(), get_user_by_id(), create_user(), update_user(), delete_user(). Напиши тесты для каждой функции. Убедись что все используют параметризованные запросы.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d24">
+    <div class="day-head" onclick="toggleCard('d24')"><div class="day-num">24</div><div class="day-title">Транзакции: COMMIT и ROLLBACK</div><div class="day-check" onclick="event.stopPropagation();markDone('d24')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>Транзакция — набор операций которые выполняются атомарно: либо все успешно, либо ни одной. Классический пример: перевод денег — снять со счёта A и добавить на счёт B должны произойти вместе или не произойти вовсе.</p></div>
+      <div class="code-block"><span class="cm">-- SQL-транзакции</span>
+<span class="kw">BEGIN</span>;
+<span class="kw">UPDATE</span> accounts <span class="kw">SET</span> balance = balance - <span class="num">1000</span> <span class="kw">WHERE</span> id = <span class="num">1</span>;
+<span class="kw">UPDATE</span> accounts <span class="kw">SET</span> balance = balance + <span class="num">1000</span> <span class="kw">WHERE</span> id = <span class="num">2</span>;
+<span class="kw">COMMIT</span>;  <span class="cm">-- подтвердить</span>
+<span class="cm">-- или ROLLBACK; — отменить если ошибка</span>
+
+<span class="cm"># Python: транзакции через psycopg2</span>
+<span class="kw">def</span> <span class="fn">transfer_money</span>(from_id, to_id, amount):
+    conn = psycopg2.<span class="fn">connect</span>(DB_URL)
+    <span class="kw">try</span>:
+        <span class="kw">with</span> conn.<span class="fn">cursor</span>() <span class="kw">as</span> cur:
+            <span class="cm"># Проверить баланс</span>
+            cur.<span class="fn">execute</span>(<span class="str">"SELECT balance FROM accounts WHERE id=%s"</span>, (from_id,))
+            balance = cur.<span class="fn">fetchone</span>()[<span class="num">0</span>]
+            <span class="kw">if</span> balance < amount:
+                <span class="kw">raise</span> ValueError(<span class="str">"Недостаточно средств"</span>)
+
+            <span class="cm"># Снять</span>
+            cur.<span class="fn">execute</span>(
+                <span class="str">"UPDATE accounts SET balance = balance - %s WHERE id = %s"</span>,
+                (amount, from_id)
+            )
+            <span class="cm"># Добавить</span>
+            cur.<span class="fn">execute</span>(
+                <span class="str">"UPDATE accounts SET balance = balance + %s WHERE id = %s"</span>,
+                (amount, to_id)
+            )
+        conn.<span class="fn">commit</span>()  <span class="cm"># подтвердить обе операции</span>
+        <span class="fn">print</span>(<span class="str">"Перевод выполнен"</span>)
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        conn.<span class="fn">rollback</span>()  <span class="cm"># отменить всё при ошибке</span>
+        <span class="fn">print</span>(<span class="str">f"Ошибка, откат: {e}"</span>)
+    <span class="kw">finally</span>:
+        conn.close()</div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Создай таблицу accounts (id, user_id FK, balance NUMERIC). Добавь счета пользователям. Напиши функцию transfer_money() с транзакцией. Сымитируй ошибку в середине транзакции — убедись что ROLLBACK откатывает обе операции.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d25">
+    <div class="day-head" onclick="toggleCard('d25')"><div class="day-num">25</div><div class="day-title">Connection Pool: эффективное управление соединениями</div><div class="day-check" onclick="event.stopPropagation();markDone('d25')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>Открытие нового соединения с PostgreSQL — дорогая операция (50-100ms). В реальном приложении на каждый HTTP-запрос создавать новое соединение — катастрофа. Connection pool держит пул готовых соединений и переиспользует их. Это стандарт для любого production-приложения.</p></div>
+      <div class="code-block"><span class="cm"># Без пула — медленно и ненадёжно</span>
+<span class="cm"># conn = psycopg2.connect(...)  # каждый раз новое соединение — НЕ ТАК</span>
+
+<span class="cm"># pip install psycopg2-binary</span>
+<span class="kw">from</span> psycopg2 <span class="kw">import</span> pool
+
+<span class="cm"># Создаём пул при старте приложения</span>
+connection_pool = pool.<span class="fn">ThreadedConnectionPool</span>(
+    minconn=2,      <span class="cm"># минимум соединений</span>
+    maxconn=10,     <span class="cm"># максимум соединений</span>
+    host=<span class="str">"localhost"</span>,
+    dbname=<span class="str">"academy"</span>,
+    user=<span class="str">"dev"</span>,
+    password=<span class="str">"secret"</span>
+)
+
+<span class="cm"># Использование пула</span>
+<span class="kw">def</span> <span class="fn">get_users</span>():
+    conn = connection_pool.<span class="fn">getconn</span>()   <span class="cm"># взять соединение из пула</span>
+    <span class="kw">try</span>:
+        <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            cur.<span class="fn">execute</span>(<span class="str">"SELECT id, name FROM users"</span>)
+            <span class="kw">return</span> cur.<span class="fn">fetchall</span>()
+    <span class="kw">finally</span>:
+        connection_pool.<span class="fn">putconn</span>(conn)   <span class="cm"># вернуть в пул!</span>
+
+<span class="cm"># Контекстный менеджер (чище)</span>
+<span class="kw">from</span> contextlib <span class="kw">import</span> contextmanager
+
+<span class="kw">@contextmanager</span>
+<span class="kw">def</span> <span class="fn">get_db</span>():
+    conn = connection_pool.<span class="fn">getconn</span>()
+    <span class="kw">try</span>:
+        <span class="kw">yield</span> conn
+    <span class="kw">finally</span>:
+        connection_pool.<span class="fn">putconn</span>(conn)
+
+<span class="cm"># Использование</span>
+<span class="kw">with</span> <span class="fn">get_db</span>() <span class="kw">as</span> conn:
+    <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+        cur.<span class="fn">execute</span>(<span class="str">"SELECT COUNT(*) FROM orders"</span>)
+        count = cur.<span class="fn">fetchone</span>()[0]</div>
+      <div class="tip tip-info"><div class="tip-label">💡 В реальных фреймворках</div><p>Flask + SQLAlchemy, FastAPI + databases, Django — все используют connection pool под капотом. Но знать как это работает важно: настройка pool_size, max_overflow, pool_timeout напрямую влияет на производительность под нагрузкой.</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Перепиши свои функции из дня 23 (CRUD) используя connection pool. Добавь контекстный менеджер get_db(). Измерь время: 100 запросов с пулом vs без пула. Что произойдёт если запросить больше соединений чем maxconn?</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d26">
+    <div class="day-head" onclick="toggleCard('d26')"><div class="day-num">26</div><div class="day-title">Переменные окружения: прячем пароли в .env</div><div class="day-check" onclick="event.stopPropagation();markDone('d26')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="code-block"><span class="cm"># pip install python-dotenv</span>
+
+<span class="cm"># Файл .env (НИКОГДА не коммить в git!)</span>
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=academy
+DB_USER=dev
+DB_PASSWORD=super_secret_password_123
+
+<span class="cm"># Файл .gitignore — обязательно добавить:</span>
+.env
+*.env
+secret_config.py
+
+<span class="cm"># Python: загрузка переменных</span>
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+<span class="kw">import</span> os
+
+load_dotenv()  <span class="cm"># загружает .env файл</span>
+
+DB_CONFIG = {
+    <span class="str">"host"</span>:     os.<span class="fn">getenv</span>(<span class="str">"DB_HOST"</span>, <span class="str">"localhost"</span>),
+    <span class="str">"port"</span>:     os.<span class="fn">getenv</span>(<span class="str">"DB_PORT"</span>, <span class="str">"5432"</span>),
+    <span class="str">"dbname"</span>:   os.<span class="fn">getenv</span>(<span class="str">"DB_NAME"</span>),
+    <span class="str">"user"</span>:     os.<span class="fn">getenv</span>(<span class="str">"DB_USER"</span>),
+    <span class="str">"password"</span>: os.<span class="fn">getenv</span>(<span class="str">"DB_PASSWORD"</span>),
+}
+
+<span class="kw">import</span> psycopg2
+conn = psycopg2.<span class="fn">connect</span>(**DB_CONFIG)
+<span class="fn">print</span>(<span class="str">"✅ Подключено!"</span>)</div>
+      <div class="tip tip-danger"><div class="tip-label">🔒 Критическая ошибка</div><p>Никогда не хардкоди пароли в коде. Никогда не коммить .env в git. Используй python-dotenv для разработки, переменные окружения сервера для продакшна. Проверь: <code>git log --all --full-history .env</code> — если .env попал в историю, нужно менять пароль!</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Создай .env файл с данными подключения. Добавь .env в .gitignore. Перепиши подключение к БД через python-dotenv. Создай .env.example (без паролей, только ключи) для документирования. Проверь что приложение работает.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d27">
+    <div class="day-head" onclick="toggleCard('d27')"><div class="day-num">27</div><div class="day-title">SQLAlchemy ORM: модели и запросы</div><div class="day-check" onclick="event.stopPropagation();markDone('d27')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>ORM (Object-Relational Mapping) позволяет работать с базой через Python-объекты, не писать SQL вручную. SQLAlchemy — самый популярный ORM в Python. Используется в Flask, FastAPI, и многих других фреймворках.</p></div>
+      <div class="code-block"><span class="cm"># pip install sqlalchemy psycopg2-binary</span>
+
+<span class="kw">from</span> sqlalchemy <span class="kw">import</span> create_engine, Column, Integer, String, ForeignKey
+<span class="kw">from</span> sqlalchemy.orm <span class="kw">import</span> declarative_base, relationship, Session
+
+Base = declarative_base()
+
+<span class="cm"># Модели = таблицы</span>
+<span class="kw">class</span> <span class="fn">User</span>(Base):
+    __tablename__ = <span class="str">"users"</span>
+    id    = Column(Integer, primary_key=True)
+    name  = Column(String(100))
+    email = Column(String(200), unique=True)
+    orders = relationship(<span class="str">"Order"</span>, back_populates=<span class="str">"user"</span>)
+
+<span class="kw">class</span> <span class="fn">Order</span>(Base):
+    __tablename__ = <span class="str">"orders"</span>
+    id      = Column(Integer, primary_key=True)
+    total   = Column(Integer)
+    user_id = Column(Integer, ForeignKey(<span class="str">"users.id"</span>))
+    user    = relationship(<span class="str">"User"</span>, back_populates=<span class="str">"orders"</span>)
+
+<span class="cm"># Подключение</span>
+engine = create_engine(<span class="str">"postgresql://dev:secret@localhost/academy"</span>)
+Base.metadata.<span class="fn">create_all</span>(engine)   <span class="cm"># создаёт таблицы если нет</span>
+
+<span class="cm"># CRUD через ORM</span>
+<span class="kw">with</span> Session(engine) <span class="kw">as</span> session:
+    <span class="cm"># Создать</span>
+    user = <span class="fn">User</span>(name=<span class="str">"Алишер"</span>, email=<span class="str">"ali@example.com"</span>)
+    session.<span class="fn">add</span>(user)
+    session.<span class="fn">commit</span>()
+
+    <span class="cm"># Прочитать</span>
+    users = session.<span class="fn">query</span>(User).<span class="fn">filter</span>(User.name.like(<span class="str">"%Али%"</span>)).<span class="fn">all</span>()
+    order = session.<span class="fn">get</span>(Order, 1)
+
+    <span class="cm"># Обновить</span>
+    user.name = <span class="str">"Новое имя"</span>
+    session.<span class="fn">commit</span>()
+
+    <span class="cm"># Удалить</span>
+    session.<span class="fn">delete</span>(user)
+    session.<span class="fn">commit</span>()</div>
+      <div class="tip tip-info"><div class="tip-label">💡 ORM vs raw SQL</div><p>ORM удобен для CRUD и простых запросов. Для сложной аналитики (агрегации, оконные функции, сложные JOIN) часто пишут raw SQL через <code>session.execute(text("SELECT ..."))</code>. Хороший разработчик умеет оба подхода.</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Создай модели User и Order через SQLAlchemy. Создай таблицы через create_all(). Добавь 3 пользователей и 5 заказов через ORM. Получи всех пользователей с их заказами через relationship. Сравни: тот же запрос через raw SQL и через ORM — что удобнее?</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d28">
+    <div class="day-head" onclick="toggleCard('d28')"><div class="day-num">28</div><div class="day-title">Миграции базы данных: Alembic</div><div class="day-check" onclick="event.stopPropagation();markDone('d28')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>Миграции — версионный контроль схемы базы данных. Когда нужно добавить колонку, переименовать таблицу или создать индекс в продакшн — нельзя просто запустить CREATE TABLE. Alembic фиксирует каждое изменение схемы и позволяет откатить его.</p></div>
+      <div class="code-block"><span class="cm"># pip install alembic</span>
+
+<span class="cm"># Инициализация</span>
+<span class="fn">alembic init alembic</span>   <span class="cm"># создаёт папку alembic/ и alembic.ini</span>
+
+<span class="cm"># В alembic.ini прописать подключение:</span>
+<span class="cm"># sqlalchemy.url = postgresql://dev:secret@localhost/academy</span>
+
+<span class="cm"># Создать миграцию автоматически (сравнивает модели с БД)</span>
+<span class="fn">alembic revision --autogenerate -m "add phone column to users"</span>
+
+<span class="cm"># Применить миграцию</span>
+<span class="fn">alembic upgrade head</span>        <span class="cm"># применить все</span>
+<span class="fn">alembic upgrade +1</span>          <span class="cm"># на одну вперёд</span>
+
+<span class="cm"># Откатить</span>
+<span class="fn">alembic downgrade -1</span>        <span class="cm"># на одну назад</span>
+<span class="fn">alembic downgrade base</span>      <span class="cm"># до самого начала</span>
+
+<span class="cm"># История миграций</span>
+<span class="fn">alembic history</span>
+<span class="fn">alembic current</span>             <span class="cm"># текущая версия</span>
+
+<span class="cm"># Пример файла миграции (versions/abc123_add_phone.py)</span>
+<span class="kw">def</span> <span class="fn">upgrade</span>():
+    op.<span class="fn">add_column</span>(<span class="str">'users'</span>, sa.Column(<span class="str">'phone'</span>, sa.String(20)))
+
+<span class="kw">def</span> <span class="fn">downgrade</span>():
+    op.<span class="fn">drop_column</span>(<span class="str">'users'</span>, <span class="str">'phone'</span>)</div>
+      <div class="tip tip-warn"><div class="tip-label">🔒 Правило продакшна</div><p>Никогда не меняй схему БД напрямую в продакшн через psql. Только через миграции. Иначе локальная версия расходится с продакшном и коллеги не смогут воспроизвести проблему. Миграции — обязательная практика в командной разработке.</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Инициализируй Alembic в проекте. Создай первую миграцию для таблиц users и orders. Примени её. Добавь новое поле phone в модель User — создай и примени миграцию. Откати миграцию назад и убедись что колонка удалилась.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d29">
+    <div class="day-head" onclick="toggleCard('d29')"><div class="day-num">29</div><div class="day-title">Резервное копирование PostgreSQL: pg_dump</div><div class="day-check" onclick="event.stopPropagation();markDone('d29')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что изучить</label><p>Бэкапы — обязательная часть эксплуатации БД. <code>pg_dump</code> создаёт снимок базы данных. Без регулярных бэкапов потеря данных из-за ошибки или атаки — катастрофа без выхода. Автоматизируй бэкапы через cron.</p></div>
+      <div class="code-block"><span class="cm"># Бэкап одной базы (SQL-формат)</span>
+<span class="prompt">$</span> pg_dump -U dev academy > backup_$(date +%Y%m%d).sql
+
+<span class="cm"># Бэкап в сжатый бинарный формат (быстрее восстанавливается)</span>
+<span class="prompt">$</span> pg_dump -U dev -Fc academy > backup_$(date +%Y%m%d).dump
+
+<span class="cm"># Бэкап только структуры (без данных)</span>
+<span class="prompt">$</span> pg_dump -U dev --schema-only academy > schema.sql
+
+<span class="cm"># Бэкап только данных</span>
+<span class="prompt">$</span> pg_dump -U dev --data-only academy > data.sql
+
+<span class="cm"># Бэкап конкретной таблицы</span>
+<span class="prompt">$</span> pg_dump -U dev -t users academy > users_backup.sql
+
+<span class="cm"># Восстановление из SQL</span>
+<span class="prompt">$</span> psql -U dev -d academy_restore < backup_20241201.sql
+
+<span class="cm"># Восстановление из бинарного</span>
+<span class="prompt">$</span> pg_restore -U dev -d academy_restore backup_20241201.dump
+
+<span class="cm"># Автоматический бэкап через cron (каждый день в 3:00)</span>
+<span class="cm"># 0 3 * * * pg_dump -U dev academy > /backups/academy_$(date +\%Y\%m\%d).sql</span>
+
+<span class="cm"># pg_dumpall — бэкап ВСЕХ баз и пользователей</span>
+<span class="prompt">$</span> pg_dumpall -U postgres > all_databases.sql</div>
+      <div class="tip tip-danger"><div class="tip-label">⚠ Проверяй бэкапы!</div><p>Бэкап который никто не проверял — не бэкап. Раз в месяц разворачивай бэкап на тестовой БД и убеждайся что данные восстанавливаются корректно. Иначе в момент аварии окажется что файл битый.</p></div>
+      <div class="task-box"><div class="task-label">Задача дня</div><p>Создай бэкап своей БД в SQL и в бинарном формате. Сравни размеры файлов. Создай новую тестовую БД academy_test и восстанови в неё бэкап. Проверь что все данные на месте. Напиши bash-скрипт автобэкапа с ротацией — хранить только последние 7 файлов.</p></div>
+    </div>
+  </div>
+
+  <div class="day-card" id="d30">
+    <div class="day-head" onclick="toggleCard('d30')"><div class="day-num">30</div><div class="day-title">Итог курса: твой путь SQL-разработчика</div><div class="day-check" onclick="event.stopPropagation();markDone('d30')">✓</div><div class="day-arrow">▶</div></div>
+    <div class="day-body">
+      <div class="section-row"><label>Что ты освоил за 30 дней</label><p>Ты прошёл полный путь от создания первой таблицы до написания production-grade приложения с транзакциями, пулом соединений, ORM и миграциями. Это фундамент который используется в каждом backend-проекте.</p></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Неделя</th><th>Навыки</th><th>Статус</th></tr></thead>
+        <tbody>
+          <tr><td>W1 · Основы</td><td>CREATE, INSERT, SELECT, WHERE, ORDER BY, LIMIT</td><td style="color:var(--amber)">✓ Пройдено</td></tr>
+          <tr><td>W2 · JOIN</td><td>FK, INNER/LEFT/SELF JOIN, UNION, CTE, M:N</td><td style="color:var(--amber)">✓ Пройдено</td></tr>
+          <tr><td>W3 · Аналитика</td><td>GROUP BY, подзапросы, индексы, оконные функции, SQL-инъекции</td><td style="color:var(--amber)">✓ Пройдено</td></tr>
+          <tr><td>W4 · Python</td><td>psycopg2, CRUD, транзакции, pool, ORM, миграции, бэкапы</td><td style="color:var(--amber)">✓ Пройдено</td></tr>
+        </tbody>
+      </table></div>
+      <div class="section-row"><label>Что дальше</label>
+        <div class="code-block"><span class="cm">-- Следующие шаги для Backend разработчика:</span>
+
+<span class="hl">1. FastAPI + SQLAlchemy</span>
+<span class="cm">   → REST API с автоматической документацией, Pydantic-схемы</span>
+
+<span class="hl">2. Redis</span>
+<span class="cm">   → Кеширование запросов к БД, сессии, очереди задач</span>
+
+<span class="hl">3. PostgreSQL Advanced</span>
+<span class="cm">   → Partitioning, Replication, JSONB, полнотекстовый поиск</span>
+
+<span class="hl">4. Celery + PostgreSQL</span>
+<span class="cm">   → Фоновые задачи, асинхронная обработка очередей</span>
+
+<span class="hl">5. Мониторинг БД</span>
+<span class="cm">   → pg_stat_statements, медленные запросы, pgBadger</span></div>
+      </div>
+      <div class="tip tip-info"><div class="tip-label">🎯 Совет для портфолио</div><p>Лучший способ закрепить знания — реальный проект. Создай FastAPI-приложение с PostgreSQL: регистрация/авторизация, JWT-токены, CRUD для любой предметной области. Добавь Alembic, Connection Pool, .env. Это то что ищут на Backend-собеседованиях.</p></div>
+      <div class="task-box"><div class="task-label">Финальная задача</div><p>Напиши SQL-шпаргалку в <code>cheatsheet.sql</code>: все команды которые использовал за курс с комментариями. Перечисли топ-5 запросов которые считаешь самыми полезными. Подготовь ответы на 5 SQL-вопросов с собеседований: разница INNER/LEFT JOIN, что такое индекс, ACID, что такое транзакция, как защититься от SQL-инъекции.</p></div>
+    </div>
+  </div>
+
+  <div class="mini-project">
+    <div class="mp-label">🎓 Финальный проект · День 30</div>
+    <h3>Система регистрации пользователей</h3>
+    <p>Полноценное консольное CRUD-приложение с PostgreSQL.</p>
+    <ul class="checklist">
+      <li>Данные подключения в .env файле (python-dotenv)</li>
+      <li>Меню: регистрация, вход, просмотр профиля, список пользователей</li>
+      <li>Валидация: уникальный email, возраст > 0, корректный формат email</li>
+      <li>Безопасное хранение: пароль через bcrypt (pip install bcrypt)</li>
+      <li>Транзакции при создании пользователя + его профиля</li>
+      <li>Красивый вывод таблицы пользователей с помощью tabulate</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">Базы данных & SQL · 30 дней · Backend & Security · <span style="color:var(--accent)">2025</span></div>
+</div>
+<script>
+const KEY='sql30_v1';
+let done=JSON.parse(localStorage.getItem(KEY)||'[]');
+function markDone(id){const card=document.getElementById(id);if(done.includes(id)){done=done.filter(d=>d!==id);card.classList.remove('done');}else{done.push(id);card.classList.add('done');}localStorage.setItem(KEY,JSON.stringify(done));updateProgress();}
+function updateProgress(){const pct=Math.round(done.length/30*100);document.getElementById('prog-val').textContent=pct+'%';document.getElementById('bar').style.width=pct+'%';document.getElementById('done-count').textContent=done.length;}
+function toggleCard(id){document.getElementById(id).classList.toggle('open');}
+function toggleAnswer(btn){btn.classList.toggle('open');btn.nextElementSibling.classList.toggle('show');}
+function showWeek(n){document.querySelectorAll('.week-section').forEach(s=>s.classList.remove('show'));document.getElementById('week'+n).classList.add('show');document.querySelectorAll('.wnav').forEach(b=>b.className='wnav');document.querySelectorAll('.wnav')[n-1].classList.add('aw'+n);}
+done.forEach(id=>{const c=document.getElementById(id);if(c)c.classList.add('done');});updateProgress();
+</script>
+</body>
+</html>
